@@ -100,25 +100,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             return 0.0
         }
         var speed = 0.0
+        var cont = 0
         for (i in 0 until points.size - 1){
+            cont++
+            val radius =  6371e3
             val lat1 = points[i].latitude
             val lat2 = points[i+1].latitude
             val lon1 = points[i].longitude
             val lon2 = points[i+1].longitude
-            val theta = lon1 - lon2
-            var dist = (Math.sin(deg2rad(lat1))
-                    * Math.sin(deg2rad(lat2))
-                    + (Math.cos(deg2rad(lat1))
-                    * Math.cos(deg2rad(lat2))
-                    * Math.cos(deg2rad(theta))))
-            dist = Math.acos(dist);
-            dist = rad2deg(dist);
-            dist = dist * 60 * 1.1515
+            val theta = deg2rad(lon2 - lon1)
+            val phi = deg2rad(lat2 - lat1)
+            var dist = (Math.sin(phi/2) * Math.sin(phi/2) +
+                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                    Math.sin(theta/2) * Math.sin(theta/2))
+            dist = 2 * Math.atan2(Math.sqrt(dist), Math.sqrt(1-dist))
+            dist = (dist * radius)/1000
             if (dist > 0.0){
                 speed += dist*3600
             }
         }
-        return Math.round((speed/(points.size - 1)) * 1000.0) / 1000.0
+        return Math.round((speed/cont) * 1000.0) / 1000.0
     }
     //Funcion para calcular la distancia recorrida
     fun distance(): Double {
@@ -127,20 +128,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         var total = 0.0
         for (i in 0 until points.size - 1){
+            val radius =  6371e3
             val lat1 = points[i].latitude
             val lat2 = points[i+1].latitude
             val lon1 = points[i].longitude
             val lon2 = points[i+1].longitude
-            val theta = lon1 - lon2
-            val phi = lat1 - lat2
-            var dist = (Math.sin(deg2rad(lat1))
-                    * Math.sin(deg2rad(lat2))
-                    + (Math.cos(deg2rad(lat1))
-                    * Math.cos(deg2rad(lat2))
-                    * Math.cos(deg2rad(theta))))
-            dist = Math.acos(dist);
-            dist = rad2deg(dist);
-            dist = dist * 60 * 1.1515;
+            val theta = deg2rad(lon2 - lon1)
+            val phi = deg2rad(lat2 - lat1)
+            var dist = (Math.sin(phi/2) * Math.sin(phi/2) +
+                    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                    Math.sin(theta/2) * Math.sin(theta/2))
+            dist = 2 * Math.atan2(Math.sqrt(dist), Math.sqrt(1-dist))
+            dist = (dist * radius)/1000
             total += dist
         }
         val totalDeci:Double = Math.round(total * 1000.0) / 1000.0
