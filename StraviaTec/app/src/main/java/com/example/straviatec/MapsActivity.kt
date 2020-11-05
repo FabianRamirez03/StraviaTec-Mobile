@@ -66,7 +66,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     flag = true
                     RequestPermission()
                     getLastLocation()
-                    ciudad.visibility = View.VISIBLE
                     showGpx()
                     distance.text = distance().toString() + "Km"
                     velProm.text = speed().toString() + "Km/h"
@@ -119,7 +118,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 speed += dist*3600
             }
         }
-        return Math.round((speed/points.size) * 1000.0) / 1000.0
+        return Math.round((speed/(points.size - 1)) * 1000.0) / 1000.0
     }
     //Funcion para calcular la distancia recorrida
     fun distance(): Double {
@@ -133,6 +132,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             val lon1 = points[i].longitude
             val lon2 = points[i+1].longitude
             val theta = lon1 - lon2
+            val phi = lat1 - lat2
             var dist = (Math.sin(deg2rad(lat1))
                     * Math.sin(deg2rad(lat2))
                     + (Math.cos(deg2rad(lat1))
@@ -268,8 +268,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         var geoCoder = Geocoder(this, Locale.getDefault())
         var Adress = geoCoder.getFromLocation(lat,long,3)
 
-        cityName = Adress.get(0).locality
-        countryName = Adress.get(0).countryName
+        try {
+            ciudad.visibility = View.VISIBLE
+            cityName = Adress.get(0).locality
+            countryName = Adress.get(0).countryName
+        }
+        catch (e:Exception){
+            ciudad.visibility = View.INVISIBLE
+        }
+
         Log.d("Debug:","Your City: " + cityName + " ; your Country " + countryName +  "Altitude: " + alt)
         val retStr = cityName +  ", " + countryName  +"\n" + " Altitud: " + alt.toInt() + " m s. n. m."
         ciudad.text = retStr
@@ -330,4 +337,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onStop()
         SpotifyService.disconnect()
     }
+    
+
 }

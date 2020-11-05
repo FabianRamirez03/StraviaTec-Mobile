@@ -8,6 +8,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        supportActionBar?.hide()
         button2.setOnClickListener{
             SpotifyService.connect(this) {
                 val intent = Intent(this@MainActivity, MapsActivity::class.java)
