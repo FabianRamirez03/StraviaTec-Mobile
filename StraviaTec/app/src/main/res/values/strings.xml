@@ -3,4 +3,6 @@
     <string name="latitudeBabel">Latitude</string>
     <string name="longitudeBabel">Longitude</string>
     <string name="title_activity_maps">Map</string>
+    <string name="open">Open</string>
+    <string name="close">Close</string>
 </resources>
