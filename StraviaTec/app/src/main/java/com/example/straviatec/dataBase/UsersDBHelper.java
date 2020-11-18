@@ -11,7 +11,12 @@ import kotlin.UByteArray;
 
 public class UsersDBHelper extends SQLiteOpenHelper {
     public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "Lawyers.db";
+    public static final String DATABASE_NAME = "User.db";
+
+    @Override
+    public SQLiteDatabase getReadableDatabase() {
+        return super.getReadableDatabase();
+    }
 
     public UsersDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -27,13 +32,14 @@ public class UsersDBHelper extends SQLiteOpenHelper {
                 + UsuarioDB.UserEntry.FECHA_NACIMIENTO + " TEXT,"
                 + UsuarioDB.UserEntry.NACIONALIDAD + " TEXT NOT NULL,"
                 + UsuarioDB.UserEntry.PASSWORD + " TEXT NOT NULL,"
-               // + UsuarioDB.UserEntry.FOTO + " ByteA,"
+                + UsuarioDB.UserEntry.EDAD + " TEXT,"
+                + UsuarioDB.UserEntry.CATEGORIA + " TEXT,"
+                + UsuarioDB.UserEntry.FOTO + " TEXT,"
                 + "UNIQUE (" + UsuarioDB.UserEntry.ID_USUARIO+ "))");
 
-        createUser(sqLiteDatabase, new Usuario("2", "wajo10",
-                "Wajib", "Zaglul", new Date(), "Costarricense", "wajib123"));
+//        createUser(sqLiteDatabase, new Usuario(2, "wajo10",
+//                "Wajib", "Zaglul", new Date(), "Costarricense", "wajib123"));
     }
-
     public long createUser(SQLiteDatabase db, Usuario usuario) {
         return db.insert(
                 UsuarioDB.UserEntry.TABLE_NAME,

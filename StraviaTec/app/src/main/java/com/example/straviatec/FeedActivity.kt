@@ -27,6 +27,17 @@ class FeedActivity : AppCompatActivity() {
         drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        val header = navView.getHeaderView(0)
+        val user = header.findViewById<TextView>(R.id.NombreCliente)
+        val baseDatos = UsersDBHelper(this)
+        val cursor= baseDatos.user
+        var cliente = ""
+        if (cursor.moveToFirst()) {
+            do {
+                cliente = cursor.getString(cursor.getColumnIndex("nombreUsuario"))
+            } while (cursor.moveToNext())
+        }
+        user.setText(cliente)
         val jsonArray = JSONArray()
         val jsonObject = JSONObject()
         jsonObject.put("nombre","Recreativa la Fortuna")

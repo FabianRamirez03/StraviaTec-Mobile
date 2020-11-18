@@ -18,6 +18,8 @@ public class UsuarioDB {
         public static final String FECHA_NACIMIENTO = "fechaNacimiento";
         public static final String NACIONALIDAD = "nacionalidad";
         public static final String PASSWORD = "password";
-        //public static final UByteArray FOTO = new UByteArray();
+        public static final String FOTO = "foto";
+        public static final String CATEGORIA = "categoria";
+        public static final String EDAD = "edad";
     }
 }
