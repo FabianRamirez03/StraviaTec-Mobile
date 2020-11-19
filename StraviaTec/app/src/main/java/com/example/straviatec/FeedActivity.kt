@@ -70,6 +70,13 @@ class FeedActivity : AppCompatActivity() {
         Log.e("KM", "HOLAAAAAAAAASDFGHJKL")
         println(retos[0].kilometraje)
         drawActividades(retos,carreras)
+        actividad.setOnClickListener{
+            val intent = Intent(this, MapsActivity::class.java)
+            intent.putExtra("Tipo", "actividad")
+            intent.putExtra("id", 0)
+            intent.putExtra("url", url)
+            startActivity(intent)
+        }
 
 
     }
@@ -207,6 +214,9 @@ class FeedActivity : AppCompatActivity() {
             val altura = TextView(this)
             altura.text = "Altura: ${reto.altura}"
 
+            val objetivo = TextView(this)
+            objetivo.text = "Objetivo: ${reto.objetivo}"
+
 
             val boton = Button(this)
             boton.background = ContextCompat.getDrawable(this, R.drawable.round_button)
@@ -231,18 +241,22 @@ class FeedActivity : AppCompatActivity() {
 
             //Kilometraje
             km.y = 54f
-            km.x = 100f
+            km.x = 20f
 
             //Altura
             altura.y = 54f
-            altura.x = 230f
+            altura.x = 100f
+
+            //Objetivo
+            objetivo.y = 54f
+            objetivo.x = 200f
 
 
             //Boton
-            boton.x = -150f
-            boton.y = 120f
-            loading.x = 250f
-            loading.y = 20f
+            boton.x = 350f
+            boton.y = 50f
+            loading.x = 150f
+            loading.y = 50f
             if (reto.completitud) {
                 boton.visibility = View.INVISIBLE
             }
@@ -268,8 +282,9 @@ class FeedActivity : AppCompatActivity() {
             gridLayout.addView(tipoAct)
             gridLayout.addView(km)
             gridLayout.addView(altura)
+            gridLayout.addView(objetivo)
             gridLayout.addView(boton)
-            gridLayout.addView(loading, 6)
+            gridLayout.addView(loading, 7)
             gridLayout.y = y
             gridLayout.background = ContextCompat.getDrawable(this, R.drawable.rectangle_color)
             y = y + 100

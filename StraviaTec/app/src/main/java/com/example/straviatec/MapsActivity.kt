@@ -19,6 +19,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.straviatec.dataBase.CarreraDBHelper
 import com.example.straviatec.dataBase.RetoDBHelper
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -29,8 +30,12 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 import kotlinx.android.synthetic.main.activity_maps.*
 import java.io.File
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
+import kotlin.math.roundToLong
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -68,6 +73,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         stopWatch.setOnClickListener{
             start = !start
         }
+        if (tipo != "actividad"){
+            nombreAct.visibility = View.INVISIBLE
+        }
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
         fixedRateTimer("timer", false, 0L,  1000) {
@@ -102,14 +110,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         val reto = retoDb.getReto(id)
                         reto.recorrido = gpx
                         if (reto.kilometraje != ""){
-                            reto.kilometraje = (reto.kilometraje?.toInt() + distance()).toString()
+                            val distancia = distance()
+                            val kilometraje = (reto.kilometraje?.toFloatOrNull()?.plus(distancia))
+                            if (kilometraje != null) {
+                                reto.kilometraje = ((Math.round(kilometraje * 1000) / 1000.0).toString())
+                            }
                         }
                         else{
                             reto.kilometraje = (distance()).toString()
                         }
+                        if(!reto.duracion.isNullOrEmpty()){
+                            val time = LocalTime.parse(reto.duracion, DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM))
+                            hours += time.hour
+                            minutes += time.minute
+                            seconds += time.second
+                            if (seconds >=60 ){
+                                minutes++
+                                seconds = seconds % 60
+                            }
+                            if (minutes >= 60){
+                                hours++
+                                minutes = minutes % 60
+                            }
+
+                        }
+                        reto.duracion = String.format("%02d:%02d:%02d", hours, minutes, seconds)
                         Log.w("GPX",reto.recorrido)
                         retoDb.updateReto(reto,id)
-                        Log.e("KM", retoDb.getReto(id).kilometraje)
+                        Log.e("Duracion", retoDb.getReto(id).duracion)
+                    }
+                    else if (tipo == "carrera"){
+                        val carreraDb = CarreraDBHelper(this@MapsActivity)
+                        val carrera = carreraDb.getCarrera(id)
+                        carrera.recorrido = gpx
+                        carrera.kilometraje = distance().toString()
+                        carrera.duracion = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                        carrera.completitud = true
+
                     }
                     val intent = Intent(this@MapsActivity,FeedActivity::class.java)
                     intent.putExtra("url", url)
@@ -290,9 +327,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         var cityName:String = ""
         var countryName = ""
         var geoCoder = Geocoder(this, Locale.getDefault())
-        var Adress = geoCoder.getFromLocation(lat,long,3)
+
 
         try {
+            var Adress = geoCoder.getFromLocation(lat,long,3)
             ciudad.visibility = View.VISIBLE
             cityName = Adress.get(0).locality
             countryName = Adress.get(0).countryName

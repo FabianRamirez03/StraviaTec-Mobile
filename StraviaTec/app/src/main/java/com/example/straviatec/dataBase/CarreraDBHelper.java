@@ -58,9 +58,9 @@ public class CarreraDBHelper extends SQLiteOpenHelper {
 
     public int updateCarrera(Carrera carrera, Integer idCarrera) {
         return getWritableDatabase().update(
-                RetoDb.RetoEntry.TABLE_NAME,
+                CarreraDB.CarreraEntry.TABLE_NAME,
                 carrera.toContentValues(),
-                RetoDb.RetoEntry.ID_DEPORTISTA + " LIKE ?",
+                CarreraDB.CarreraEntry.ID_CARRERA + " LIKE ?",
                 new String[]{idCarrera.toString()}
         );
     }
