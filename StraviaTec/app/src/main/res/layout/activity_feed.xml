@@ -17,7 +17,7 @@
             android:layout_width="287dp"
             android:layout_height="51dp"
             android:fontFamily="@font/exo_medium"
-            android:text="Mis actividades y Retos"
+            android:text="Mis Carreras y Retos"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="@color/colorPrimary"
             android:textSize="24sp"
@@ -30,8 +30,9 @@
 
         <ScrollView
             android:id="@+id/scrollView2"
-            android:layout_width="412dp"
-            android:layout_height="675dp"
+            android:layout_width="411dp"
+            android:layout_height="703dp"
+            android:padding="20dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
@@ -43,7 +44,16 @@
                 android:id="@+id/linearLay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/actividad"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/round_button"
+                    android:text="Realizar Actividad Recreativa"
+                    android:textColor="@color/colorAccent" />
+            </LinearLayout>
         </ScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

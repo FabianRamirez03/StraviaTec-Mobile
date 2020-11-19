@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 
 class Usuario(var idUsuario: Int,
               var nombreUsuario: String, var nombre:String,
-              var apellidos: String, var fechaNacimiento: LocalDateTime, var nacionalidad: String, var password: String, var foto:UByteArray?, var edad: Int?, var categoria:String? ) {
+              var apellidos: String, var fechaNacimiento: LocalDateTime, var nacionalidad: String, var password: String, var foto:String?, var edad: Int?, var categoria:String? ) {
 
     fun toContentValues(): ContentValues? {
         val values = ContentValues()

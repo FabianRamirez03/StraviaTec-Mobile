@@ -12,9 +12,9 @@ import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
-import com.example.straviatec.dataBase.UsersDBHelper
-import com.example.straviatec.dataBase.Usuario
+import com.example.straviatec.dataBase.*
 import kotlinx.android.synthetic.main.activity_login.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDateTime
 import java.util.*
@@ -40,7 +40,10 @@ class loginActivity : AppCompatActivity() {
                         val userRequest = JsonObjectRequest(Request.Method.POST,"${url}Usuario/porNombreUsuario", jsonObject,Response.Listener { response->
                             if(response != null){
                                 val baseDatos = UsersDBHelper(this)
+                                val id =  response.getInt("idusuario");
                                 deleteDatabase(UsersDBHelper.DATABASE_NAME);
+                                deleteDatabase(CarreraDBHelper.DATABASE_NAME);
+                                deleteDatabase(RetoDBHelper.DATABASE_NAME);
                                 baseDatos.createUser(
                                     baseDatos.readableDatabase, Usuario(
                                         response.getInt("idusuario"),
@@ -50,7 +53,7 @@ class loginActivity : AppCompatActivity() {
                                         LocalDateTime.parse(response.get("fechanacimiento") as CharSequence?),
                                         response.getString("nacionalidad"),
                                         response.getString("contrasena"),
-                                        optByteArray(response,"foto"),
+                                        optString(response,"foto"),
                                         optInt(response,"edad"),
                                         optString(response,"categoria")
                                     )
@@ -61,11 +64,76 @@ class loginActivity : AppCompatActivity() {
                                         println(cursor.getString(cursor.getColumnIndex("fechaNacimiento")))
                                     } while (cursor.moveToNext())
                                 }
-                                val intent = Intent(this, FeedActivity::class.java)
-                                intent.putExtra("Cliente", response.toString())
-                                intent.putExtra("url", url)
-                                finish()
-                                startActivity(intent)
+                                val queue = Volley.newRequestQueue(this)
+                                val jsonObjectCarr = JSONObject()
+                                jsonObjectCarr.put("Idusuario",id)
+                                var JsonReqCarr = MyJsonArrayRequest(
+                                    Request.Method.POST,"${url}Carrera/carrerasPorUsuario",jsonObjectCarr,
+                                    Response.Listener<JSONArray> { response->
+                                        for (i in 0 until response.length()){
+                                            val carrera = response[i] as JSONObject
+                                            val carreraDB = CarreraDBHelper(this)
+                                            carreraDB.createCarrera(
+                                                carreraDB.readableDatabase, Carrera(
+                                                    carrera.getInt("idDeportista"),
+                                                    carrera.getString("categoria"),
+                                                    carrera.getInt("idCarrera"),
+                                                    carrera.getString("nombreCarrera"),
+                                                    carrera.getString("tipo"),
+                                                    LocalDateTime.parse(carrera.get("fecha") as CharSequence?),
+                                                    carrera.getString("kilometraje"),
+                                                    carrera.getString("altura"),
+                                                    carrera.getString("duracion"),
+                                                    carrera.getBoolean("completitud"),
+                                                    carrera.getString("recorrido")
+
+                                                )
+                                            )
+
+                                            //Retos
+                                            val jsonObjectReto = JSONObject()
+                                            jsonObjectReto.put("Idusuario",id)
+                                            var JsonReqReto = MyJsonArrayRequest(
+                                                Request.Method.POST,"${url}Retos/retosPorUsuario",jsonObjectReto,
+                                                Response.Listener<JSONArray> { response->
+                                                    for (i in 0 until response.length()){
+                                                        val reto = response[i] as JSONObject
+                                                        val retoDB = RetoDBHelper(this)
+                                                        retoDB.createReto(
+                                                            retoDB.readableDatabase, Reto(
+                                                                reto.getInt("idDeportista"),
+                                                                reto.getInt("idReto"),
+                                                                reto.getString("nombreReto"),
+                                                                reto.getString("objetivo"),
+                                                                reto.getString("tipoActividad"),
+                                                                reto.getString("tipoReto"),
+                                                                LocalDateTime.parse(reto.get("fechaInicio") as CharSequence?),
+                                                                LocalDateTime.parse(reto.get("fechaFinal") as CharSequence?),
+                                                                reto.getString("kilometraje"),
+                                                                reto.getString("altura"),
+                                                                reto.getString("duracion"),
+                                                                reto.getBoolean("completitud"),
+                                                                reto.getString("recorrido")
+
+                                                            )
+                                                        )
+                                                        val intent = Intent(this, FeedActivity::class.java)
+                                                        intent.putExtra("Cliente", response.toString())
+                                                        intent.putExtra("url", url)
+                                                        finish()
+                                                        startActivity(intent)
+                                                    }
+                                                },
+                                                Response.ErrorListener {
+                                                    Toast.makeText(this,"Error", Toast.LENGTH_LONG).show()
+                                                })
+                                            queue.add(JsonReqReto)
+                                        }
+                                    },
+                                    Response.ErrorListener {
+                                        Toast.makeText(this,"Error", Toast.LENGTH_LONG).show()
+                                    })
+                                queue.add(JsonReqCarr)
                             }
                         },Response.ErrorListener {Toast.makeText(this,it.toString(), Toast.LENGTH_LONG).show()
                             button2.visibility = View.VISIBLE
@@ -92,14 +160,6 @@ class loginActivity : AppCompatActivity() {
             return null;
         else
             return json.optString(key, null);
-    }
-    fun optByteArray(json: JSONObject, key: String): UByteArray?
-    {
-        // http://code.google.com/p/android/issues/detail?id=13830
-        if (json.isNull(key))
-            return null;
-        else
-            return json.optString(key, null).toByteArray().toUByteArray();
     }
     fun optInt(json: JSONObject, key: String): Int?
     {

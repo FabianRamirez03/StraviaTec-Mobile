@@ -9,14 +9,17 @@ import android.graphics.Color
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.straviatec.dataBase.RetoDBHelper
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -37,6 +40,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     lateinit var locationRequest: LocationRequest
     lateinit var locat:Location
     lateinit var polyLineOptions: PolylineOptions
+    lateinit var url:String
+    lateinit var tipo:String
     var points = mutableListOf<Location>()
     val PERMISSION_ID = 1010
     var counter = 0
@@ -47,6 +52,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     var hours = 0
     var stopText = ""
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
@@ -55,6 +61,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        url = intent.getStringExtra("url").toString()
+        tipo = intent.getStringExtra("Tipo").toString()
+        var id = getIntent().getExtras()?.getInt("id")!!
+        Log.w("TIPO",tipo)
         stopWatch.setOnClickListener{
             start = !start
         }
@@ -85,9 +95,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 else if (flag){
                     flag = false
                     var file = File(this@MapsActivity.filesDir,"rutas.gpx")
-                    GPX.writePath(file,"gpxLoc",points)
-                    val intent = Intent(this@MapsActivity,MapsActivity::class.java)
-                    finish()
+                    var gpx = GPX.writePath(file,"gpxLoc",points)
+                    if(tipo == "reto"){
+                        println("ENTRAAAA")
+                        val retoDb = RetoDBHelper(this@MapsActivity)
+                        val reto = retoDb.getReto(id)
+                        reto.recorrido = gpx
+                        if (reto.kilometraje != ""){
+                            reto.kilometraje = (reto.kilometraje?.toInt() + distance()).toString()
+                        }
+                        else{
+                            reto.kilometraje = (distance()).toString()
+                        }
+                        Log.w("GPX",reto.recorrido)
+                        retoDb.updateReto(reto,id)
+                        Log.e("KM", retoDb.getReto(id).kilometraje)
+                    }
+                    val intent = Intent(this@MapsActivity,FeedActivity::class.java)
+                    intent.putExtra("url", url)
                     startActivity(intent)
                 }
             }
