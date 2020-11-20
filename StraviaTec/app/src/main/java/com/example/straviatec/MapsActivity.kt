@@ -62,6 +62,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     var minutes = 0
     var hours = 0
     var stopText = ""
+    var lastEscalado = 0.0
+    var totalEscalado = 0.0
+    var init = false
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,6 +104,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     showGpx()
                     distance.text = distance().toString() + "Km"
                     velProm.text = speed().toString() + "Km/h"
+                    escalado()
                     //Mostrar Tiempo en Cronometro
                     seconds++
                     if (seconds % 60 ==0 && seconds != 0){
@@ -123,6 +127,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         val retoDb = RetoDBHelper(this@MapsActivity)
                         val reto = retoDb.getReto(id)
                         reto.recorrido = gpx
+
+                        //Kilometraje
                         if (reto.kilometraje != ""){
                             val distancia = distance()
                             val kilometraje = (reto.kilometraje?.toFloatOrNull()?.plus(distancia))
@@ -133,6 +139,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         else{
                             reto.kilometraje = (distance()).toString()
                         }
+
+                        //Altura
+                        if (reto.altura != ""){
+                            val altura = (reto.altura?.toFloatOrNull()?.plus(totalEscalado))
+                            if (altura != null) {
+                                reto.altura = ((Math.round(totalEscalado * 1000) / 1000.0).toString())
+                            }
+                        }
+                        else{
+                            reto.altura = (totalEscalado).toString()
+                        }
+
+                        //Duracion
                         if(!reto.duracion.isNullOrEmpty()){
                             val time = LocalTime.parse(reto.duracion, DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM))
                             hours += time.hour
@@ -148,6 +167,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                             }
 
                         }
+                        if(reto.tipoReto == "fondo"){
+                            if (reto.objetivo.toInt() <= reto.kilometraje.toInt()){
+                                reto.completitud = true
+                            }
+                        }
+                        else if(reto.tipoReto == "altitud"){
+                            if (reto.objetivo.toInt() <= reto.altura.toInt()){
+                                reto.completitud = false
+                            }
+                        }
                         reto.duracion = String.format("%02d:%02d:%02d", hours, minutes, seconds)
                         Log.w("GPX",reto.recorrido)
                         retoDb.updateReto(reto,id)
@@ -158,6 +187,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         val carrera = carreraDb.getCarrera(id)
                         carrera.recorrido = gpx
                         carrera.kilometraje = distance().toString()
+                        carrera.altura = totalEscalado.toString()
                         carrera.duracion = String.format("%02d:%02d:%02d", hours, minutes, seconds)
                         carrera.completitud = true
                         carreraDb.updateCarrera(carrera,id)
@@ -232,6 +262,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val totalDeci:Double = Math.round(total * 1000.0) / 1000.0
         return totalDeci
     }
+    fun escalado(){
+        if (init){
+            if (points.size > 2){
+                if (locat.altitude > lastEscalado){
+                    totalEscalado += locat.altitude - lastEscalado
+                }
+                lastEscalado = locat.altitude
+            }
+            else{
+                lastEscalado = locat.altitude
+            }
+        }
+}
 
     //Funcion que muestra el recorrido del atleta
     fun showGpx(){
@@ -303,6 +346,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         getCityName(locat.latitude,locat.longitude, locat.altitude)
                         Log.d("Debug:" ,"Your Location:"+ location.longitude)
                         points.add(location)
+                        init = true
                     }
                 }
             }else{
@@ -410,7 +454,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
         playButton.setOnClickListener {
-            SpotifyService.play("spotify:playlist:5H2vIqDt7s2bYSOfW0sGcV")
+            SpotifyService.play("spotify:playlist:3CgjYW0HGFA90jwMavXicr")
         }
 
         pauseButton.setOnClickListener {

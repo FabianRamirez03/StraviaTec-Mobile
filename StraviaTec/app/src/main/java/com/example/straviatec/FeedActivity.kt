@@ -111,7 +111,7 @@ class FeedActivity : AppCompatActivity() {
             nombre.text = carrera.nombreCarrera
 
             val tipo = TextView(this)
-            tipo.text = "Tipo: ${carrera.tipo}"
+            tipo.text = carrera.tipo
 
             val categoria = TextView(this)
             categoria.text = carrera.categoria
@@ -122,7 +122,7 @@ class FeedActivity : AppCompatActivity() {
             fecha.text = carrera.fecha.format(formatter)
 
             val km = TextView(this)
-            km.text = "Kilometraje:  ${carrera.kilometraje}"
+            km.text = "Km: ${carrera.kilometraje}"
 
             val altura = TextView(this)
             altura.text = "Altura: ${carrera.altura}"
@@ -136,11 +136,11 @@ class FeedActivity : AppCompatActivity() {
             loading.visibility = View.INVISIBLE
 
             //Nombre
-            nombre.textSize = 24f
+            nombre.textSize = 18f
             nombre.x = 20f
 
             //Tipo
-            tipo.textSize = 24f
+            tipo.textSize = 18f
             tipo.x = 100f
 
 
@@ -162,7 +162,7 @@ class FeedActivity : AppCompatActivity() {
 
 
             //Boton
-            boton.x = 150f
+            boton.x = 120f
             boton.y = 50f
             loading.x = 200f
             loading.y = 50f
@@ -222,7 +222,7 @@ class FeedActivity : AppCompatActivity() {
 
 
             val km = TextView(this)
-            km.text = "Kilometraje:  ${reto.kilometraje}"
+            km.text = "Km:  ${reto.kilometraje}"
 
             val altura = TextView(this)
             altura.text = "Altura: ${reto.altura}"
@@ -239,11 +239,11 @@ class FeedActivity : AppCompatActivity() {
             loading.visibility = View.INVISIBLE
 
             //Nombre
-            nombre.textSize = 24f
+            nombre.textSize = 18f
             nombre.x = 20f
 
             //Tipo
-            tipo.textSize = 24f
+            tipo.textSize = 18f
             tipo.x = 100f
 
 
@@ -322,7 +322,7 @@ class FeedActivity : AppCompatActivity() {
 
 
             val km = TextView(this)
-            km.text = "Kilometraje:  ${actividad.km}"
+            km.text = "Km:  ${actividad.km}"
 
             val altura = TextView(this)
             altura.text = "Altura: ${actividad.altura}"
@@ -369,7 +369,7 @@ class FeedActivity : AppCompatActivity() {
             gridLayout.addView(fecha)
             gridLayout.addView(duracion)
             gridLayout.y = y
-            gridLayout.background = ContextCompat.getDrawable(this, R.drawable.rectangle)
+            gridLayout.background = ContextCompat.getDrawable(this, R.drawable.rectangle_color_orange)
             y = y + 100
 
             layout.addView(gridLayout)
@@ -393,7 +393,9 @@ class FeedActivity : AppCompatActivity() {
                 Request.Method.POST,
                 "${url}Retos/updateUserRetos",
                 jsonObject,
-                Response.Listener { response -> },
+                Response.Listener { response ->
+                    Toast.makeText(this, "Retos actualizados correctamente :)", Toast.LENGTH_SHORT).show()
+                },
                 Response.ErrorListener {
                     Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
                 })
@@ -414,7 +416,7 @@ class FeedActivity : AppCompatActivity() {
                 Request.Method.POST,
                 "${url}Carrera/updateUserCarrera",
                 jsonObject,
-                Response.Listener { response -> },
+                Response.Listener { response -> Toast.makeText(this, "Carreras actualizadas correctamente :)", Toast.LENGTH_SHORT).show() },
                 Response.ErrorListener {
                     Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
                 })
