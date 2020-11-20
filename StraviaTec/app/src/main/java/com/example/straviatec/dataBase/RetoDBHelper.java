@@ -83,7 +83,7 @@ public class RetoDBHelper extends SQLiteOpenHelper {
                         cursor.getString(cursor.getColumnIndex("kilometraje")),
                         cursor.getString(cursor.getColumnIndex("altura")),
                         cursor.getString(cursor.getColumnIndex("duracion")),
-                        Boolean.getBoolean(cursor.getString(cursor.getColumnIndex("completitud"))),
+                        Boolean.valueOf(cursor.getString(cursor.getColumnIndex("completitud"))),
                         cursor.getString(cursor.getColumnIndex("recorrido"))
                 );
                 lista.add(reto);

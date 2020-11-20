@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -35,7 +36,8 @@ public class ActividadDBHelper extends SQLiteOpenHelper {
                 + ActividadDB.ActividadEntry.TIPO + " TEXT,"
                 + ActividadDB.ActividadEntry.DURACION + " TEXT,"
                 + ActividadDB.ActividadEntry.FECHA + " TEXT,"
-                + "UNIQUE (" + CarreraDB.CarreraEntry.ID_CARRERA+ "))");
+                + ActividadDB.ActividadEntry.SINCRONIZADO + " TEXT,"
+                + "UNIQUE (" + ActividadDB.ActividadEntry.ID_ACTIVIDAD+ "))");
     }
 
     @Override
@@ -43,11 +45,19 @@ public class ActividadDBHelper extends SQLiteOpenHelper {
 
     }
 
-    public long createActividad(SQLiteDatabase db, Actividad actividad) {
-        return db.insert(
-                RetoDb.RetoEntry.TABLE_NAME,
+    public void createActividad(SQLiteDatabase db, Actividad actividad) {
+        db.insert(
+                ActividadDB.ActividadEntry.TABLE_NAME,
                 null,
                 actividad.toContentValues());
+        Cursor cursor = getReadableDatabase().rawQuery("select last_insert_rowid() as idActividad from actividad", null);
+        if (cursor.moveToFirst()) {
+            do {
+                Integer id = cursor.getInt(cursor.getColumnIndex("idActividad"));
+                Log.e("ID",id.toString());
+                actividad.setIdActividad(id);
+            } while (cursor.moveToNext());
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -64,11 +74,22 @@ public class ActividadDBHelper extends SQLiteOpenHelper {
                         cursor.getString(cursor.getColumnIndex("recorrido")),
                         cursor.getString(cursor.getColumnIndex("tipo")),
                         cursor.getString(cursor.getColumnIndex("duracion")),
-                        LocalDateTime.parse(cursor.getString(cursor.getColumnIndex("fecha")))
+                        LocalDateTime.parse(cursor.getString(cursor.getColumnIndex("fecha"))),
+                        Boolean.valueOf((cursor.getString(cursor.getColumnIndex("sincronizado"))))
                 );
+                actividad.setIdActividad(cursor.getColumnIndex("idActividad"));
                 lista.add(actividad);
             } while (cursor.moveToNext());
         }
         return lista;
+    }
+
+    public int updateActividad(Actividad actividad, Integer idActividad) {
+        return getWritableDatabase().update(
+                ActividadDB.ActividadEntry.TABLE_NAME,
+                actividad.toContentValues(),
+                ActividadDB.ActividadEntry.ID_ACTIVIDAD + " LIKE ?",
+                new String[]{idActividad.toString()}
+        );
     }
 }

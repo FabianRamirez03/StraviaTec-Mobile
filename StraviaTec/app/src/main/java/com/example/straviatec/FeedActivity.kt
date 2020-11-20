@@ -16,17 +16,18 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.content.ContextCompat
 import com.android.volley.Request
 import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.example.straviatec.dataBase.*
 import kotlinx.android.synthetic.main.activity_feed.*
-import org.json.JSONArray
 import org.json.JSONObject
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 class FeedActivity : AppCompatActivity() {
     lateinit var toggle: ActionBarDrawerToggle
     lateinit var url: String
+    var id =  0
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +44,6 @@ class FeedActivity : AppCompatActivity() {
         val cursor= baseDatos.user
         var nombreUsuario = ""
         var imagen = ""
-        var id = 0
         if (cursor.moveToFirst()) {
             do {
                 nombreUsuario = cursor.getString(cursor.getColumnIndex("nombreUsuario"))
@@ -54,36 +54,48 @@ class FeedActivity : AppCompatActivity() {
         user.setText(nombreUsuario)//Mostrar Usuario
 
         //Mostrar Imagen
-        if (imagen != null){
-            Log.i("TAG", imagen.length.toString())
-            imagen = imagen.split(",")[1]
-            var imagen64 = Base64.decode(imagen, Base64.CRLF)
-            var bitmap =  BitmapFactory.decodeByteArray(imagen64, 0, imagen64.size);
-            img.setImageBitmap(bitmap)
+        if (imagen != null) {
+            try {
+                Log.i("TAG", imagen.length.toString())
+                imagen = imagen.split(",")[1]
+                var imagen64 = Base64.decode(imagen, Base64.CRLF)
+                var bitmap = BitmapFactory.decodeByteArray(imagen64, 0, imagen64.size);
+                img.setImageBitmap(bitmap)
+            } catch (e: Exception) {
+            }
         }
-        //Carreras
         val carrerasDB = CarreraDBHelper(this)
         val retosDB = RetoDBHelper(this)
+        val actividadesDB = ActividadDBHelper(this)
         val carreras = carrerasDB.getListaCarreras(id)
         val retos = retosDB.getListaRetos(id)
-        Log.e("KM", retos[0].kilometraje)
-        Log.e("KM", "HOLAAAAAAAAASDFGHJKL")
-        println(retos[0].kilometraje)
-        drawActividades(retos,carreras)
+        val actividades = actividadesDB.getListaActividades(id)
+        Log.e("ACTIVIDAD", actividades.size.toString())
+        drawActividades(retos,carreras, actividades)
+
+        sync.setOnClickListener{
+            syncServer(retos,carreras,actividades)
+        }
+
+
         actividad.setOnClickListener{
-            val intent = Intent(this, MapsActivity::class.java)
-            intent.putExtra("Tipo", "actividad")
-            intent.putExtra("id", 0)
-            intent.putExtra("url", url)
-            startActivity(intent)
+            SpotifyService.connect(this) {
+                val intent = Intent(this, MapsActivity::class.java)
+                intent.putExtra("Tipo", "actividad")
+                intent.putExtra("id", 0)
+                intent.putExtra("usuario", id)
+                intent.putExtra("url", url)
+                startActivity(intent)
+            }
+
         }
 
 
     }
     @RequiresApi(Build.VERSION_CODES.O)
-    fun drawActividades(retos: List<Reto>, carreras: List<Carrera>) {
+    fun drawActividades(retos: List<Reto>, carreras: List<Carrera>, actividades: List<Actividad>) {
         val layout = findViewById<LinearLayout>(R.id.linearLay)
-        layout.minimumHeight = 1080
+        layout.minimumHeight = 3080
         var marginY = 0F
         val marginX = 50F
         var y = 50f
@@ -168,6 +180,7 @@ class FeedActivity : AppCompatActivity() {
                     val intent = Intent(this, MapsActivity::class.java)
                     intent.putExtra("Tipo", "carrera")
                     intent.putExtra("id", carrera.idCarrera)
+                    intent.putExtra("usuario", id)
                     intent.putExtra("url", url)
                     startActivity(intent)
                 }
@@ -271,6 +284,7 @@ class FeedActivity : AppCompatActivity() {
                     val intent = Intent(this, MapsActivity::class.java)
                     intent.putExtra("Tipo", "reto")
                     intent.putExtra("id", reto.idReto)
+                    intent.putExtra("usuario", id)
                     intent.putExtra("url", url)
                     startActivity(intent)
                 }
@@ -291,6 +305,147 @@ class FeedActivity : AppCompatActivity() {
 
             layout.addView(gridLayout)
 
+        }
+        //Actividades
+        for (actividad in actividades) {
+            val gridLayout = GridLayout(this)
+            gridLayout.setAlignmentMode(GridLayout.ALIGN_MARGINS);
+            gridLayout.setColumnCount(3)
+            gridLayout.setRowCount(4)
+            gridLayout.minimumHeight = 310
+
+            val nombre = TextView(this)
+            nombre.text = actividad.nombreActividad
+
+            val tipo = TextView(this)
+            tipo.text = "${actividad.tipo}"
+
+
+            val km = TextView(this)
+            km.text = "Kilometraje:  ${actividad.km}"
+
+            val altura = TextView(this)
+            altura.text = "Altura: ${actividad.altura}"
+
+            val duracion = TextView(this)
+            duracion.text = actividad.duracion
+
+            val fecha = TextView(this)
+            fecha.text = actividad.fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+
+
+
+            //Nombre
+            nombre.textSize = 20f
+            nombre.x = 20f
+
+            //Tipo
+            tipo.textSize = 20f
+            tipo.x = 100f
+
+            //Fecha
+            fecha.y = 54f
+            fecha.x = 100f
+
+
+            //Kilometraje
+            km.y = 54f
+            km.x = 20f
+
+            //Altura
+            altura.textSize = 20f
+            altura.x = 200f
+
+            //Duracion
+            duracion.y = 54f
+            duracion.x = 200f
+
+
+
+            gridLayout.addView(nombre)
+            gridLayout.addView(tipo)
+            gridLayout.addView(altura)
+            gridLayout.addView(km)
+            gridLayout.addView(fecha)
+            gridLayout.addView(duracion)
+            gridLayout.y = y
+            gridLayout.background = ContextCompat.getDrawable(this, R.drawable.rectangle)
+            y = y + 100
+
+            layout.addView(gridLayout)
+
+        }
+
+    }
+
+    fun syncServer(retos: List<Reto>, carreras: List<Carrera>, actividades: List<Actividad>){
+        for (reto in retos) {
+            val queue = Volley.newRequestQueue(this)
+            val jsonObject = JSONObject()
+            jsonObject.put("Idreto", reto.idReto)
+            jsonObject.put("Iddeportista", reto.idDeportista)
+            jsonObject.put("Duracion", reto.duracion)
+            jsonObject.put("Kilometraje", reto.kilometraje)
+            jsonObject.put("Altura", reto.altura)
+            jsonObject.put("Completitud", reto.completitud)
+            jsonObject.put("Recorrido", reto.recorrido)
+            val stringRequest = JsonObjectRequest(
+                Request.Method.POST,
+                "${url}Retos/updateUserRetos",
+                jsonObject,
+                Response.Listener { response -> },
+                Response.ErrorListener {
+                    Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
+                })
+            queue.add(stringRequest)
+        }
+
+        for(carrera in carreras){
+            val queue = Volley.newRequestQueue(this)
+            val jsonObject = JSONObject()
+            jsonObject.put("Idcarrera", carrera.idCarrera)
+            jsonObject.put("Iddeportista", carrera.idDeportista)
+            jsonObject.put("Tiemporegistrado", carrera.duracion)
+            jsonObject.put("Kilometraje", carrera.kilometraje)
+            jsonObject.put("Altura", carrera.altura)
+            jsonObject.put("Completitud", carrera.completitud)
+            jsonObject.put("Recorrido", carrera.recorrido)
+            val stringRequest = JsonObjectRequest(
+                Request.Method.POST,
+                "${url}Carrera/updateUserCarrera",
+                jsonObject,
+                Response.Listener { response -> },
+                Response.ErrorListener {
+                    Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
+                })
+            queue.add(stringRequest)
+        }
+        for(actividad in actividades){
+            Log.e("Sincronizado",actividad.sincronizado.toString())
+            if (!actividad.sincronizado){
+                val queue = Volley.newRequestQueue(this)
+                val jsonObject = JSONObject()
+                jsonObject.put("Iddeportista", actividad.idDeportista)
+                jsonObject.put("Nombreactividad", actividad.nombreActividad)
+                jsonObject.put("Duracion", actividad.duracion)
+                jsonObject.put("Kilometraje", actividad.km)
+                jsonObject.put("Altura", actividad.altura)
+                jsonObject.put("Mapa", actividad.recorrido)
+                jsonObject.put("Fecha", actividad.fecha)
+                jsonObject.put("Tipoactividad", actividad.tipo)
+                val stringRequest = JsonObjectRequest(
+                    Request.Method.POST,
+                    "${url}Actividad/addActivity",
+                    jsonObject,
+                    Response.Listener { response -> actividad.sincronizado = true
+                    val act = ActividadDBHelper(this)
+                    act.updateActividad(actividad,actividad.idActividad)
+                        Toast.makeText(this, "Se añadió la actividad correctamente :)", Toast.LENGTH_LONG).show()},
+                    Response.ErrorListener {
+                        Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
+                    })
+                queue.add(stringRequest)
+            }
         }
 
     }

@@ -1,9 +1,9 @@
 package com.example.straviatec
 
-import android.app.Activity;
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -17,7 +17,6 @@ import kotlinx.android.synthetic.main.activity_login.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDateTime
-import java.util.*
 
 class loginActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -36,7 +35,7 @@ class loginActivity : AppCompatActivity() {
                 jsonObject.put("NombreUsuario",usuario.text)
                 jsonObject.put("Contrasena",password.text)
                 val stringRequest = JsonObjectRequest(Request.Method.POST,"${url}Usuario/validarUser", jsonObject,Response.Listener { response->
-                    if(response.getBoolean("validacion")){
+                    if(response.getInt("validacion") == 1){
                         val userRequest = JsonObjectRequest(Request.Method.POST,"${url}Usuario/porNombreUsuario", jsonObject,Response.Listener { response->
                             if(response != null){
                                 val baseDatos = UsersDBHelper(this)
@@ -44,6 +43,7 @@ class loginActivity : AppCompatActivity() {
                                 deleteDatabase(UsersDBHelper.DATABASE_NAME);
                                 deleteDatabase(CarreraDBHelper.DATABASE_NAME);
                                 deleteDatabase(RetoDBHelper.DATABASE_NAME);
+                                deleteDatabase(ActividadDBHelper.DATABASE_NAME);
                                 baseDatos.createUser(
                                     baseDatos.readableDatabase, Usuario(
                                         response.getInt("idusuario"),
@@ -70,7 +70,8 @@ class loginActivity : AppCompatActivity() {
                                 var JsonReqCarr = MyJsonArrayRequest(
                                     Request.Method.POST,"${url}Carrera/carrerasPorUsuario",jsonObjectCarr,
                                     Response.Listener<JSONArray> { response->
-                                        for (i in 0 until response.length()){
+                                        Log.e("PASA","PASA POR CARRERA")
+                                        for (i in 0 until response.length()) {
                                             val carrera = response[i] as JSONObject
                                             val carreraDB = CarreraDBHelper(this)
                                             carreraDB.createCarrera(
@@ -89,7 +90,7 @@ class loginActivity : AppCompatActivity() {
 
                                                 )
                                             )
-
+                                        }
                                             //Retos
                                             val jsonObjectReto = JSONObject()
                                             jsonObjectReto.put("Idusuario",id)
@@ -117,21 +118,47 @@ class loginActivity : AppCompatActivity() {
 
                                                             )
                                                         )
-                                                        val intent = Intent(this, FeedActivity::class.java)
-                                                        intent.putExtra("Cliente", response.toString())
-                                                        intent.putExtra("url", url)
-                                                        finish()
-                                                        startActivity(intent)
                                                     }
+                                                    val jsonObjectActividad = JSONObject()
+                                                    jsonObjectActividad.put("Idusuario",id)
+                                                    var JsonReqActividad = MyJsonArrayRequest(
+                                                        Request.Method.POST,"${url}Actividad/activiPorUsuario",jsonObjectActividad,
+                                                        Response.Listener<JSONArray> { response->
+                                                            for (i in 0 until response.length()){
+                                                                val actividad = response[i] as JSONObject
+                                                                val actividadDB = ActividadDBHelper(this)
+                                                                actividadDB.createActividad(
+                                                                    actividadDB.readableDatabase, Actividad(
+                                                                        actividad.getInt("idDeportista"),
+                                                                        actividad.getString("nombreActividad"),
+                                                                        actividad.getString("kilometraje"),
+                                                                        actividad.getString("altura"),
+                                                                        actividad.getString("recorrido"),
+                                                                        actividad.getString("tipo"),
+                                                                        actividad.getString("duracion"),
+                                                                        LocalDateTime.parse(actividad.get("fecha") as CharSequence?),
+                                                                        true
+                                                                    )
+                                                                )
+                                                            }
+                                                            val intent = Intent(this, FeedActivity::class.java)
+                                                            intent.putExtra("Cliente", response.toString())
+                                                            intent.putExtra("url", url)
+                                                            finish()
+                                                            startActivity(intent)
+                                                        },
+                                                        Response.ErrorListener {
+                                                            Toast.makeText(this,"Error obteniendo las Actividades", Toast.LENGTH_LONG).show()
+                                                        })
+                                                    queue.add(JsonReqActividad)
                                                 },
                                                 Response.ErrorListener {
-                                                    Toast.makeText(this,"Error", Toast.LENGTH_LONG).show()
+                                                    Toast.makeText(this,"Error obteniendo los retos", Toast.LENGTH_LONG).show()
                                                 })
                                             queue.add(JsonReqReto)
-                                        }
                                     },
                                     Response.ErrorListener {
-                                        Toast.makeText(this,"Error", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(this,"Error obteniendo las carreras", Toast.LENGTH_LONG).show()
                                     })
                                 queue.add(JsonReqCarr)
                             }

@@ -14,11 +14,16 @@ import android.os.Bundle
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.get
+import com.example.straviatec.dataBase.Actividad
+import com.example.straviatec.dataBase.ActividadDBHelper
 import com.example.straviatec.dataBase.CarreraDBHelper
 import com.example.straviatec.dataBase.RetoDBHelper
 import com.google.android.gms.location.*
@@ -30,6 +35,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 import kotlinx.android.synthetic.main.activity_maps.*
 import java.io.File
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -69,12 +75,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         url = intent.getStringExtra("url").toString()
         tipo = intent.getStringExtra("Tipo").toString()
         var id = getIntent().getExtras()?.getInt("id")!!
+        var usuario = getIntent().getExtras()?.getInt("usuario")!!
         Log.w("TIPO",tipo)
         stopWatch.setOnClickListener{
             start = !start
         }
+
         if (tipo != "actividad"){
             nombreAct.visibility = View.INVISIBLE
+            spinner1.visibility = View.INVISIBLE
+        }
+        else{
+            var items = listOf<String>("Correr", "Nadar", "Ciclismo","Senderismo","Kayak","Caminata")
+            val adapter = ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, items)
+            spinner1.adapter = adapter
         }
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
@@ -146,7 +160,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         carrera.kilometraje = distance().toString()
                         carrera.duracion = String.format("%02d:%02d:%02d", hours, minutes, seconds)
                         carrera.completitud = true
+                        carreraDb.updateCarrera(carrera,id)
 
+                    }
+                    //Crear Actividad en la base de datos
+                    else if (tipo == "actividad"){
+                        val actividadDb = ActividadDBHelper(this@MapsActivity)
+                        actividadDb.createActividad(actividadDb.readableDatabase,
+                        Actividad(usuario,actividad.text.toString(),distance().toString(),"0",gpx,spinner1.selectedItem.toString(),String.format("%02d:%02d:%02d", hours, minutes, seconds),
+                            LocalDateTime.now(),false)
+                        )
+                        Log.e("ACTIVIDAD", "ENTRA")
+                        Log.e("ACTIVIDAD", actividadDb.getListaActividades(usuario)[0].recorrido)
                     }
                     val intent = Intent(this@MapsActivity,FeedActivity::class.java)
                     intent.putExtra("url", url)

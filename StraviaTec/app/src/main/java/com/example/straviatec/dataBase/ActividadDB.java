@@ -15,5 +15,6 @@ public class ActividadDB
             public static final String TIPO = "tipo";
             public static final String DURACION = "duracion";
             public static final String FECHA = "fecha";
+            public static final String SINCRONIZADO = "sincronizado";
         }
 }
