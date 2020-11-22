@@ -129,7 +129,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         reto.recorrido = gpx
 
                         //Kilometraje
-                        if (reto.kilometraje != ""){
+                        if (!reto.kilometraje.isNullOrEmpty()){
                             val distancia = distance()
                             val kilometraje = (reto.kilometraje?.toFloatOrNull()?.plus(distancia))
                             if (kilometraje != null) {
@@ -137,18 +137,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                             }
                         }
                         else{
-                            reto.kilometraje = (distance()).toString()
+                            reto.kilometraje = (distance().toInt()).toString()
                         }
 
                         //Altura
-                        if (reto.altura != ""){
+                        if (!reto.altura.isNullOrEmpty()){
                             val altura = (reto.altura?.toFloatOrNull()?.plus(totalEscalado))
                             if (altura != null) {
-                                reto.altura = ((Math.round(totalEscalado * 1000) / 1000.0).toString())
+                                val alt = totalEscalado.toInt()
+                                Log.e("ALTURA",alt.toString())
+                                reto.altura = alt.toString()
                             }
                         }
                         else{
-                            reto.altura = (totalEscalado).toString()
+                            reto.altura = (totalEscalado.toInt()).toString()
                         }
 
                         //Duracion
@@ -167,14 +169,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                             }
 
                         }
+                        println(reto.tipoReto)
                         if(reto.tipoReto == "fondo"){
-                            if (reto.objetivo.toInt() <= reto.kilometraje.toInt()){
+                            if (reto.objetivo.toFloat() <= reto.kilometraje.toFloat()){
                                 reto.completitud = true
                             }
                         }
                         else if(reto.tipoReto == "altitud"){
-                            if (reto.objetivo.toInt() <= reto.altura.toInt()){
-                                reto.completitud = false
+                            println("ALTITUUUUUD")
+                            if (reto.objetivo.toFloat() <= reto.altura.toFloat()){
+                                reto.completitud = true
+                                Log.e("COMP", "TRUE")
+                            }
+                            else{
+                                Log.e("COMP", "False")
                             }
                         }
                         reto.duracion = String.format("%02d:%02d:%02d", hours, minutes, seconds)
@@ -186,8 +194,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         val carreraDb = CarreraDBHelper(this@MapsActivity)
                         val carrera = carreraDb.getCarrera(id)
                         carrera.recorrido = gpx
-                        carrera.kilometraje = distance().toString()
-                        carrera.altura = totalEscalado.toString()
+                        carrera.kilometraje = distance().toInt().toString()
+                        carrera.altura = totalEscalado.toInt().toString()
                         carrera.duracion = String.format("%02d:%02d:%02d", hours, minutes, seconds)
                         carrera.completitud = true
                         carreraDb.updateCarrera(carrera,id)

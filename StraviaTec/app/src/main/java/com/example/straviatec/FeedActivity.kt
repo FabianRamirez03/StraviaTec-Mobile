@@ -95,7 +95,7 @@ class FeedActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun drawActividades(retos: List<Reto>, carreras: List<Carrera>, actividades: List<Actividad>) {
         val layout = findViewById<LinearLayout>(R.id.linearLay)
-        layout.minimumHeight = 3080
+        layout.minimumHeight = 50080
         var marginY = 0F
         val marginX = 50F
         var y = 50f
@@ -136,11 +136,11 @@ class FeedActivity : AppCompatActivity() {
             loading.visibility = View.INVISIBLE
 
             //Nombre
-            nombre.textSize = 18f
+            nombre.textSize = 15f
             nombre.x = 20f
 
             //Tipo
-            tipo.textSize = 18f
+            tipo.textSize = 15f
             tipo.x = 100f
 
 
@@ -162,7 +162,7 @@ class FeedActivity : AppCompatActivity() {
 
 
             //Boton
-            boton.x = 120f
+            boton.x = 55f
             boton.y = 50f
             loading.x = 200f
             loading.y = 50f
@@ -239,11 +239,11 @@ class FeedActivity : AppCompatActivity() {
             loading.visibility = View.INVISIBLE
 
             //Nombre
-            nombre.textSize = 18f
+            nombre.textSize = 15f
             nombre.x = 20f
 
             //Tipo
-            tipo.textSize = 18f
+            tipo.textSize = 15f
             tipo.x = 100f
 
 
@@ -398,6 +398,7 @@ class FeedActivity : AppCompatActivity() {
                 },
                 Response.ErrorListener {
                     Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
+                    Log.e("ERROR Reto",it.toString())
                 })
             queue.add(stringRequest)
         }
@@ -419,6 +420,7 @@ class FeedActivity : AppCompatActivity() {
                 Response.Listener { response -> Toast.makeText(this, "Carreras actualizadas correctamente :)", Toast.LENGTH_SHORT).show() },
                 Response.ErrorListener {
                     Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
+                    Log.e("ERROR Carrera",it.toString())
                 })
             queue.add(stringRequest)
         }
@@ -444,6 +446,7 @@ class FeedActivity : AppCompatActivity() {
                     act.updateActividad(actividad,actividad.idActividad)
                         Toast.makeText(this, "Se añadió la actividad correctamente :)", Toast.LENGTH_LONG).show()},
                     Response.ErrorListener {
+                        Log.e("ERROR Actividad",it.toString())
                         Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
                     })
                 queue.add(stringRequest)
